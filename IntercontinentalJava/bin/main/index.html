@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Intercontinental - Produtos e Pedidos desde 1902</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1 1 350px;
+        }
+        label {
+            display: block;
+            margin-top: 8px;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 12px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #1976d2;
+            color: #fff;
+            font-weight: bold;
+        }
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background: #eee;
+        }
+        .msg {
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        .msg.ok {
+            color: green;
+        }
+        .msg.err {
+            color: red;
+        }
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Intercontinental</h1>
+    <p>Use este site para cadastrar <strong>produtos</strong> e criar <strong>pedidos</strong> no banco de dados.</p>
+
+    <div class="container">
+        <!-- Card de cadastro de produto -->
+        <div class="card">
+            <h2>Cadastrar Produto</h2>
+            <form id="produto-form">
+                <label>
+                    ID:
+                    <input type="number" id="produto-id" required />
+                </label>
+                <label>
+                    Nome:
+                    <input type="text" id="produto-nome" required />
+                </label>
+                <label>
+                    Preço:
+                    <input type="number" step="0.01" id="produto-preco" required />
+                </label>
+                <button type="submit">Salvar Produto</button>
+            </form>
+            <div id="produto-msg" class="msg"></div>
+
+            <h3>Produtos cadastrados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                    </tr>
+                </thead>
+                <tbody id="produtos-tbody">
+                    <!-- preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Card de pedidos -->
+        <div class="card">
+            <h2>Criar Pedido</h2>
+            <p>Selecione os produtos na tabela ao lado e clique em "Criar Pedido".</p>
+            <button id="btn-criar-pedido">Criar Pedido</button>
+            <div id="pedido-msg" class="msg"></div>
+
+            <h3>Pedidos salvos</h3>
+            <ul id="pedidos-lista">
+                <!-- preenchido via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const produtoForm   = document.getElementById('produto-form');
+        const produtoMsg    = document.getElementById('produto-msg');
+        const produtosTbody = document.getElementById('produtos-tbody');
+
+        const btnCriarPedido = document.getElementById('btn-criar-pedido');
+        const pedidoMsg      = document.getElementById('pedido-msg');
+        const pedidosLista   = document.getElementById('pedidos-lista');
+
+        // Helper para mostrar mensagem
+        function showMessage(el, text, isOk = true) {
+            el.textContent = text;
+            el.className = 'msg ' + (isOk ? 'ok' : 'err');
+        }
+
+        // Carrega lista de produtos
+        async function carregarProdutos() {
+            produtosTbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+            try {
+                const res = await fetch('/produtos');
+                const dados = await res.json();
+                produtosTbody.innerHTML = '';
+                if (!Array.isArray(dados) || dados.length === 0) {
+                    produtosTbody.innerHTML = '<tr><td colspan="4">Nenhum produto cadastrado.</td></tr>';
+                    return;
+                }
+                dados.forEach(p => {
+                    const tr = document.createElement('tr');
+
+                    const tdSel = document.createElement('td');
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.className = 'produto-check';
+                    cb.dataset.id = p.id;
+                    cb.dataset.nome = p.nome;
+                    cb.dataset.preco = p.preco;
+                    tdSel.appendChild(cb);
+
+                    const tdId = document.createElement('td');
+                    tdId.textContent = p.id;
+
+                    const tdNome = document.createElement('td');
+                    tdNome.textContent = p.nome;
+
+                    const tdPreco = document.createElement('td');
+                    tdPreco.textContent = p.preco;
+
+                    tr.appendChild(tdSel);
+                    tr.appendChild(tdId);
+                    tr.appendChild(tdNome);
+                    tr.appendChild(tdPreco);
+                    produtosTbody.appendChild(tr);
+                });
+            } catch (err) {
+                produtosTbody.innerHTML = '<tr><td colspan="4">Erro ao carregar produtos.</td></tr>';
+                console.error(err);
+            }
+        }
+
+        // Carrega lista de pedidos
+        async function carregarPedidos() {
+            pedidosLista.innerHTML = '<li>Carregando...</li>';
+            try {
+                const res = await fetch('/pedidos');
+                const dados = await res.json();
+                pedidosLista.innerHTML = '';
+                if (!Array.isArray(dados) || dados.length === 0) {
+                    pedidosLista.innerHTML = '<li>Nenhum pedido salvo.</li>';
+                    return;
+                }
+                dados.forEach(txt => {
+                    const li = document.createElement('li');
+                    li.textContent = txt;
+                    pedidosLista.appendChild(li);
+                });
+            } catch (err) {
+                pedidosLista.innerHTML = '<li>Erro ao carregar pedidos.</li>';
+                console.error(err);
+            }
+        }
+
+        // Enviar novo produto
+        produtoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('produto-id').value, 10);
+            const nome = document.getElementById('produto-nome').value;
+            const preco = parseFloat(document.getElementById('produto-preco').value);
+
+            if (isNaN(id) || isNaN(preco) || !nome) {
+                showMessage(produtoMsg, 'Preencha os campos corretamente.', false);
+                return;
+            }
+
+            const produto = { id, nome, preco };
+
+            try {
+                const res = await fetch('/produtos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(produto)
+                });
+
+                if (!res.ok) {
+                    throw new Error('Erro HTTP: ' + res.status);
+                }
+
+                showMessage(produtoMsg, 'Produto salvo com sucesso!');
+                produtoForm.reset();
+                carregarProdutos();
+            } catch (err) {
+                console.error(err);
+                showMessage(produtoMsg, 'Erro ao salvar produto.', false);
+            }
+        });
+
+        // Criar pedido com base nos produtos selecionados
+        btnCriarPedido.addEventListener('click', async () => {
+            const checkboxes = document.querySelectorAll('.produto-check:checked');
+            if (checkboxes.length === 0) {
+                showMessage(pedidoMsg, 'Selecione pelo menos um produto.', false);
+                return;
+            }
+
+            const produtos = Array.from(checkboxes).map(cb => ({
+                id: parseInt(cb.dataset.id, 10),
+                nome: cb.dataset.nome,
+                preco: parseFloat(cb.dataset.preco)
+            }));
+
+            const pedido = { produtos };
+
+            btnCriarPedido.disabled = true;
+            showMessage(pedidoMsg, 'Enviando pedido...', true);
+
+            try {
+                const res = await fetch('/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pedido)
+                });
+
+                const body = await res.json();
+                if (!res.ok) {
+                    console.error(body);
+                    throw new Error(body.error || 'Erro ao salvar pedido');
+                }
+
+                showMessage(pedidoMsg, 'Pedido salvo! ID: ' + body.id, true);
+                carregarPedidos();
+            } catch (err) {
+                console.error(err);
+                showMessage(pedidoMsg, 'Erro ao salvar pedido.', false);
+            } finally {
+                btnCriarPedido.disabled = false;
+            }
+        });
+
+        // Inicialização
+        carregarProdutos();
+        carregarPedidos();
+    </script>
+</body>
+</html>
