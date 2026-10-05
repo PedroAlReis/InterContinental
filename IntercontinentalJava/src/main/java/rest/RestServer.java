@@ -23,25 +23,20 @@ public class RestServer {
         ProdutoDAO produtoDAO = new ProdutoDAO();
         PedidoDAO pedidoDAO = new PedidoDAO();
 
-        // cria tabelas se não existirem
+        
         produtoDAO.criarTabela();
         pedidoDAO.criarTabelas();
 
-        // ============================
-        // SERVIR ARQUIVOS ESTÁTICOS
-        // ============================
-        // aponta para src/main/resources
+        
         staticFiles.externalLocation("src/main/resources");
 
-        // redireciona a rota principal para o index.html
+        
         get("/", (req, res) -> {
             res.redirect("/index.html");
             return null;
         });
 
-        // ============================
-        // LIBERAR CORS
-        // ============================
+       
         options("/*", (req, res) -> {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -50,9 +45,7 @@ public class RestServer {
         });
         before((req, res) -> res.header("Access-Control-Allow-Origin", "*"));
 
-        // ============================
-        // ROTAS PRODUTOS
-        // ============================
+       
         get("/produtos", (req, res) -> {
             res.type("application/json");
             return gson.toJson(produtoDAO.listarTodos());
@@ -65,9 +58,7 @@ public class RestServer {
             return gson.toJson(p);
         });
 
-        // ============================
-        // ROTAS PEDIDOS
-        // ============================
+        
         post("/pedido", (req, res) -> {
             res.type("application/json");
 
