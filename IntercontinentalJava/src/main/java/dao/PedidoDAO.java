@@ -10,7 +10,7 @@ import db.Database;
 import model.Pedido;
 import model.Produto;
 
-public class PedidoDAO {
+public class DAOTask {
 
     public void criarTabelas(){
         String pedido = "CREATE TABLE IF NOT EXISTS pedido(id INTEGER PRIMARY KEY AUTOINCREMENT, valor_total REAL)";
