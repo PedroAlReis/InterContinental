@@ -2,8 +2,8 @@ package rest;
 
 import com.google.gson.Gson;
 
-import dao.PedidoDAO;
-import dao.ProdutoDAO;
+import dao.DAOTask;
+import dao.DAOProduct;
 import model.Pedido;
 import model.Produto;
 import static spark.Spark.before;
@@ -20,12 +20,12 @@ public class RestServer {
         port(4567);
         Gson gson = new Gson();
         
-        ProdutoDAO produtoDAO = new ProdutoDAO();
-        PedidoDAO pedidoDAO = new PedidoDAO();
+        ProdutoDAO DAOProduct = new ProdutoDAO();
+        PedidoDAO DAOTask = new PedidoDAO();
 
         
-        produtoDAO.criarTabela();
-        pedidoDAO.criarTabelas();
+        DAOProduct.criarTabela();
+        DAOTask.criarTabelas();
 
         
         staticFiles.externalLocation("src/main/resources");
@@ -66,18 +66,18 @@ public class RestServer {
             Pedido novo = new Pedido();
 
             for (Produto p : ped.getProdutos()) {
-                Produto prod = produtoDAO.buscarPorId(p.getId());
+                Produto prod = DAOProduct.buscarPorId(p.getId());
                 if (prod != null) novo.adicionarProduto(prod);
             }
 
-            pedidoDAO.salvar(novo);
+            DAOProduct.salvar(novo);
 
             return gson.toJson("Pedido criado! ID: " + novo.getId());
         });
 
         get("/pedidos", (req, res) -> {
             res.type("application/json");
-            return gson.toJson(pedidoDAO.listarPedidos());
+            return gson.toJson(DAOProduct.listarPedidos());
         });
 
         System.out.println("Servidor rodando em http://localhost:4567/");
