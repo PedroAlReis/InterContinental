@@ -1,21 +1,21 @@
 package dao;
 import java.sql.*;
 import java.util.*;
-import db.ConexaoBD;
+import db.Database;
 import model.Produto;
 
 public class ProdutoDAO {
     public void criarTabela(){
         String sql = "CREATE TABLE IF NOT EXISTS produto(" +
                      "id INTEGER PRIMARY KEY, nome TEXT, preco REAL, tamanho_mb REAL, peso REAL)";
-        try (Connection c = ConexaoBD.conectar(); Statement st = c.createStatement()){
+        try (Connection c = Database.conectar(); Statement st = c.createStatement()){
             st.execute(sql);
         } catch (Exception e) { e.printStackTrace(); }
     }
 
     public void inserir(Produto p){
         String sql = "INSERT INTO produto(id,nome,preco,tamanho_mb,peso) VALUES(?,?,?,?,?)";
-        try (Connection c = ConexaoBD.conectar(); PreparedStatement ps = c.prepareStatement(sql)){
+        try (Connection c = Database.conectar(); PreparedStatement ps = c.prepareStatement(sql)){
             ps.setInt(1, p.getId());
             ps.setString(2, p.getNome());
             ps.setDouble(3, p.getPreco());
@@ -36,7 +36,7 @@ public class ProdutoDAO {
 
     public List<Produto> listarTodos(){
         List<Produto> lista = new ArrayList<>();
-        try (Connection c = ConexaoBD.conectar(); Statement st = c.createStatement()){
+        try (Connection c = Database.conectar(); Statement st = c.createStatement()){
             ResultSet rs = st.executeQuery("SELECT * FROM produto");
             while (rs.next()){
                 lista.add(new Produto(rs.getInt("id"), rs.getString("nome"), rs.getDouble("preco")));
@@ -46,7 +46,7 @@ public class ProdutoDAO {
     }
 
     public Produto buscarPorId(int id){
-        try (Connection c = ConexaoBD.conectar();
+        try (Connection c = Database.conectar();
              PreparedStatement ps = c.prepareStatement("SELECT * FROM produto WHERE id = ?")){
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
