@@ -4,7 +4,7 @@ import java.util.*;
 import db.Database;
 import model.Produto;
 
-public class ProdutoDAO {
+public class DAOProduct {
     public void criarTabela(){
         String sql = "CREATE TABLE IF NOT EXISTS produto(" +
                      "id INTEGER PRIMARY KEY, nome TEXT, preco REAL, tamanho_mb REAL, peso REAL)";
